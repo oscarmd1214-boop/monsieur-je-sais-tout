@@ -1,0 +1,8 @@
+name = "monsieur-je-sais-tout"
+compatibility_date = "2026-11-03"
+pages_build_output_dir = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "monsieur-je-sais-tout-db"
+database_id = "A_REMPLACER_PAR_TON_ID"
