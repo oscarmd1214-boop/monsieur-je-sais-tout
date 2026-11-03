@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101014">
+  <title>Monsieur Je sais tout</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Monsieur Je sais tout</a>
+    <nav>
+      <button id="loginButton">Connexion</button>
+      <button id="registerButton">Créer un compte</button>
+      <button id="logoutButton" hidden>Déconnexion</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">LE PODCAST</p>
+      <h1>Monsieur Je sais tout</h1>
+      <p>Des épisodes à découvrir, à écouter et à retrouver quand tu veux.</p>
+      <label class="search">
+        <span>⌕</span>
+        <input id="searchInput" type="search" placeholder="Rechercher un épisode…">
+      </label>
+    </section>
+
+    <section class="account-panel" id="accountPanel" hidden>
+      <h2 id="accountTitle">Mon espace</h2>
+      <p id="accountMessage"></p>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">À ÉCOUTER</p>
+          <h2>Les épisodes</h2>
+        </div>
+        <span id="episodeCount">Chargement…</span>
+      </div>
+      <div id="episodes" class="episode-grid">
+        <p>Chargement des épisodes…</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">TON ESPACE</p>
+          <h2>Mes favoris</h2>
+        </div>
+      </div>
+      <div id="favorites" class="episode-grid">
+        <p>Connecte-toi pour retrouver tes favoris.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">LES PLUS ÉCOUTÉS</p>
+          <h2>Classement</h2>
+        </div>
+      </div>
+      <div id="ranking" class="episode-grid">
+        <p>Le classement apparaîtra ici.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Monsieur Je sais tout · Tous les épisodes au même endroit.</p>
+  </footer>
+
+  <dialog id="authDialog">
+    <form id="authForm">
+      <button type="button" class="close" id="closeDialog" aria-label="Fermer">×</button>
+      <p class="eyebrow" id="authEyebrow">TON ESPACE</p>
+      <h2 id="authTitle">Connexion</h2>
+      <label>Nom d'utilisateur
+        <input id="username" minlength="3" maxlength="20" required autocomplete="username">
+      </label>
+      <label>Mot de passe
+        <input id="password" type="password" minlength="10" required autocomplete="current-password">
+      </label>
+      <p id="authError" class="error" role="alert"></p>
+      <button class="primary" id="authSubmit" type="submit">Se connecter</button>
+    </form>
+  </dialog>
+
+  <div class="player" id="player" hidden>
+    <div class="player-info">
+      <strong id="playerTitle">Aucun épisode</strong>
+      <span id="playerStatus">Choisis un épisode</span>
+    </div>
+    <audio id="audioPlayer" controls preload="none"></audio>
+  </div>
+
+  <script src="/app.js" defer></script>
+</body>
+                                          </html>
