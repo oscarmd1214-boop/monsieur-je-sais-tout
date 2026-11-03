@@ -1,4 +1,4 @@
-import { json, getSession } from "../../_shared.js";
+import { json, getSession } from "../../../_shared.js";
 
 export async function onRequestGet({ request, env }) {
   const user = await getSession(request, env);
