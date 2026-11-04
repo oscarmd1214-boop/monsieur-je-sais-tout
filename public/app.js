@@ -1,3 +1,4 @@
+
 const API = "/api";
 
 let episodes = [];
@@ -7,17 +8,41 @@ let authMode = "login";
 
 const $ = (id) => document.getElementById(id);
 
+// API avec gestion détaillée des erreurs
 async function api(path, options = {}) {
-  const response = await fetch(API + path, {
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json", ...options.headers },
-    ...options
-  });
+  let response;
 
-  const data = await response.json().catch(() => ({}));
+  try {
+    response = await fetch(API + path, {
+      credentials: "same-origin",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers
+      }
+    });
+  } catch (error) {
+    console.error("Erreur réseau :", error);
+    throw new Error("Impossible de contacter le serveur.");
+  }
+
+  const text = await response.text();
+  let data = {};
+
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    console.error("Réponse serveur non JSON :", text);
+    throw new Error(
+      `Réponse serveur invalide (HTTP ${response.status}).`
+    );
+  }
 
   if (!response.ok) {
-    throw new Error(data.error || "Une erreur est survenue.");
+    console.error("Erreur API :", response.status, data);
+    throw new Error(
+      data.error || `Erreur serveur HTTP ${response.status}.`
+    );
   }
 
   return data;
@@ -35,8 +60,11 @@ function escapeHTML(value = "") {
 
 function formatDate(value) {
   if (!value) return "";
+
   const date = new Date(value);
+
   if (Number.isNaN(date.getTime())) return "";
+
   return date.toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",
@@ -57,7 +85,9 @@ function episodeCard(episode) {
       >
       <div class="episode-content">
         <h3>${escapeHTML(episode.title)}</h3>
-        <div class="episode-date">${escapeHTML(formatDate(episode.date))}</div>
+        <div class="episode-date">
+          ${escapeHTML(formatDate(episode.date))}
+        </div>
         <p>${escapeHTML(episode.description || "Aucune description.")}</p>
         <div class="episode-actions">
           <button data-play="${escapeHTML(episode.id)}">▶ Écouter</button>
@@ -80,7 +110,9 @@ function renderEpisodes(list = episodes) {
 }
 
 function renderFavorites() {
-  const list = episodes.filter((episode) => favorites.has(episode.id));
+  const list = episodes.filter((episode) =>
+    favorites.has(episode.id)
+  );
 
   $("favorites").innerHTML = currentUser
     ? (list.length
@@ -102,7 +134,9 @@ function renderRanking() {
           <h3>${escapeHTML(episode.title)}</h3>
           <p>${episode.plays || 0} écoute(s) lancée(s)</p>
           <div class="episode-actions">
-            <button data-play="${escapeHTML(episode.id)}">▶ Écouter</button>
+            <button data-play="${escapeHTML(episode.id)}">
+              ▶ Écouter
+            </button>
           </div>
         </div>
       </article>
@@ -115,7 +149,9 @@ async function loadEpisodes() {
 
   try {
     const data = await api("/episodes");
+
     episodes = data.episodes || [];
+
     renderEpisodes();
     renderFavorites();
     renderRanking();
@@ -128,9 +164,12 @@ async function loadEpisodes() {
 async function loadMe() {
   try {
     const data = await api("/me");
+
     currentUser = data.user || null;
     favorites = new Set(data.favorites || []);
-  } catch {
+  } catch (error) {
+    console.error("Chargement du compte :", error);
+
     currentUser = null;
     favorites = new Set();
   }
@@ -144,11 +183,12 @@ function updateAccount() {
   $("loginButton").hidden = Boolean(currentUser);
   $("registerButton").hidden = Boolean(currentUser);
   $("logoutButton").hidden = !currentUser;
-
   $("accountPanel").hidden = !currentUser;
 
   if (currentUser) {
-    $("accountTitle").textContent = `Bienvenue, ${currentUser.username} !`;
+    $("accountTitle").textContent =
+      `Bienvenue, ${currentUser.username} !`;
+
     $("accountMessage").textContent =
       "Tes favoris sont associés à ton compte.";
   }
@@ -156,14 +196,19 @@ function updateAccount() {
 
 function openAuth(mode) {
   authMode = mode;
+
   $("authTitle").textContent =
     mode === "login" ? "Connexion" : "Créer un compte";
+
   $("authEyebrow").textContent =
     mode === "login" ? "TON ESPACE" : "INSCRIPTION";
+
   $("authSubmit").textContent =
     mode === "login" ? "Se connecter" : "Créer mon compte";
+
   $("authError").textContent = "";
   $("password").value = "";
+
   $("password").autocomplete =
     mode === "login" ? "current-password" : "new-password";
 
@@ -172,7 +217,10 @@ function openAuth(mode) {
 
 async function submitAuth(event) {
   event.preventDefault();
+
   $("authError").textContent = "";
+  $("authSubmit").disabled = true;
+  $("authSubmit").textContent = "Chargement…";
 
   try {
     const data = await api(
@@ -195,8 +243,15 @@ async function submitAuth(event) {
     updateAccount();
     renderFavorites();
     renderEpisodes();
+
   } catch (error) {
+    console.error("Erreur authentification :", error);
     $("authError").textContent = error.message;
+
+  } finally {
+    $("authSubmit").disabled = false;
+    $("authSubmit").textContent =
+      authMode === "login" ? "Se connecter" : "Créer mon compte";
   }
 }
 
@@ -209,6 +264,7 @@ async function logout() {
 
   currentUser = null;
   favorites = new Set();
+
   updateAccount();
   renderFavorites();
   renderEpisodes();
@@ -216,6 +272,7 @@ async function logout() {
 
 async function playEpisode(id) {
   const episode = episodes.find((item) => item.id === id);
+
   if (!episode || !episode.audio) return;
 
   $("player").hidden = false;
@@ -227,6 +284,7 @@ async function playEpisode(id) {
 
   try {
     await audio.play();
+
     $("playerStatus").textContent = "Lecture en cours";
 
     await api("/episodes", {
@@ -235,11 +293,16 @@ async function playEpisode(id) {
     });
 
     const data = await api("/episodes");
+
     episodes = data.episodes || [];
+
     renderRanking();
+
   } catch (error) {
+    console.error("Erreur lecture :", error);
+
     $("playerStatus").textContent =
-      "Appuie sur lecture pour démarrer.";
+      "Lecture audio disponible, mais enregistrement impossible.";
   }
 }
 
@@ -260,11 +323,15 @@ async function toggleFavorite(id) {
       })
     });
 
-    if (wasFavorite) favorites.delete(id);
-    else favorites.add(id);
+    if (wasFavorite) {
+      favorites.delete(id);
+    } else {
+      favorites.add(id);
+    }
 
     renderEpisodes();
     renderFavorites();
+
   } catch (error) {
     alert(error.message);
   }
@@ -278,8 +345,13 @@ function handleEpisodeClick(event) {
   const playButton = event.target.closest("[data-play]");
   const favoriteButton = event.target.closest("[data-favorite]");
 
-  if (playButton) playEpisode(playButton.dataset.play);
-  if (favoriteButton) toggleFavorite(favoriteButton.dataset.favorite);
+  if (playButton) {
+    playEpisode(playButton.dataset.play);
+  }
+
+  if (favoriteButton) {
+    toggleFavorite(favoriteButton.dataset.favorite);
+  }
 }
 
 $("searchInput").addEventListener("input", (event) => {
@@ -298,7 +370,9 @@ $("loginButton").addEventListener("click", () => openAuth("login"));
 $("registerButton").addEventListener("click", () => openAuth("register"));
 $("logoutButton").addEventListener("click", logout);
 $("authForm").addEventListener("submit", submitAuth);
-$("closeDialog").addEventListener("click", () => $("authDialog").close());
+$("closeDialog").addEventListener("click", () =>
+  $("authDialog").close()
+);
 
 $("audioPlayer").addEventListener("play", () => {
   $("playerStatus").textContent = "Lecture en cours";
